@@ -10,161 +10,160 @@
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,sans-serif;background:#f2f5f3;color:#17251f}
 header{background:#123c32;color:white;padding:20px}
-header h1{margin:0;font-size:25px}
-header p{margin:6px 0 0}
-nav{display:flex;overflow-x:auto;background:white;padding:8px;gap:6px;position:sticky;top:0;z-index:2}
-nav button{border:0;background:#e9efeb;padding:12px;border-radius:8px;white-space:nowrap}
+header h2{margin:0}
+header p{margin:6px 0 0;color:#c9ddd4}
+nav{display:flex;overflow-x:auto;background:#fff;padding:8px;gap:6px;position:sticky;top:0;z-index:5}
+nav button{border:0;background:#edf2ef;padding:12px;border-radius:8px;white-space:nowrap;color:#123c32;font-weight:bold}
 nav button.active{background:#123c32;color:white}
-main{padding:14px;max-width:750px;margin:auto}
-.card{background:white;border-radius:12px;padding:15px;margin-bottom:13px;box-shadow:0 2px 7px #0001}
-h2{font-size:19px}
-input,select{width:100%;padding:13px;margin:7px 0 12px;border:1px solid #ccd5ce;border-radius:8px;font-size:16px}
-label{font-size:14px;font-weight:bold}
-.primary{background:#123c32;color:white;border:0;padding:13px;border-radius:8px;width:100%;font-size:16px}
-.danger{background:#b72e2e;color:white;border:0;padding:9px;border-radius:7px}
-.secondary{background:#e9efeb;border:0;padding:9px;border-radius:7px}
-.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.stat{background:#e9f3ed;padding:14px;border-radius:10px}
-.stat strong{display:block;font-size:19px;margin-top:7px;overflow-wrap:anywhere}
-.item{border-bottom:1px solid #eee;padding:12px 0}
-.item:last-child{border:0}
-.green{color:#137444}
-.red{color:#b72e2e}
-.small{font-size:13px;color:#66756c}
-.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
-.actions button{padding:9px;border:0;border-radius:7px}
+main{padding:15px;max-width:950px;margin:auto}
+h3{color:#123c32}
+.card{background:white;padding:15px;border-radius:12px;margin-bottom:13px;box-shadow:0 2px 7px #0000000b}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.stat{background:white;padding:15px;border-radius:10px}
+.stat small{color:#64736c}
+.stat strong{display:block;font-size:20px;margin-top:8px;color:#123c32}
+input,select,textarea{width:100%;padding:12px;border:1px solid #ccd7d0;border-radius:8px;margin:6px 0 12px;font-size:15px;background:white}
+label{font-weight:bold;font-size:14px}
+button.action{background:#123c32;color:white;border:0;padding:11px 14px;border-radius:8px;font-weight:bold;margin:3px;cursor:pointer}
+button.danger{background:#a52b2b}
+button.secondary{background:#64736c}
+button.warning{background:#bd761a}
+table{width:100%;border-collapse:collapse;min-width:450px}
+th,td{padding:10px;border-bottom:1px solid #e5ebe7;text-align:left;font-size:14px}
+th{background:#edf3ef}
+.table-wrap{overflow-x:auto}
+.empty{color:#7b8981;text-align:center;padding:20px}
+.green{color:#16834e}
+.red{color:#bd3030}
+.hidden{display:none}
+small.muted{color:#7b8981}
+footer{text-align:center;padding:20px;color:#718078}
 </style>
 </head>
 <body>
 
 <header>
-<h1>MON COMMERCE</h1>
-<p>La gestion simple de ton commerce</p>
+<h2>MON COMMERCE</h2>
+<p>Gestion simple de ton activité commerciale</p>
 </header>
 
-<nav>
-<button class="active" onclick="page('accueil',this)">Accueil</button>
+<nav id="navigation">
+<button class="active" onclick="page('accueil',this)">Tableau de bord</button>
 <button onclick="page('produits',this)">Produits</button>
 <button onclick="page('ventes',this)">Ventes</button>
 <button onclick="page('depenses',this)">Dépenses</button>
 <button onclick="page('dettes',this)">Dettes</button>
-<button onclick="page('historique',this)">Historique</button>
+<button onclick="page('clients',this)">Clients</button>
 <button onclick="page('sauvegarde',this)">Sauvegarde</button>
 </nav>
 
 <main id="app"></main>
-<footer style="text-align:center;padding:20px;color:#78847d">
-MON COMMERCE
-</footer>
+<footer>MON COMMERCE © 2026</footer>
 
 <script>
-"use strict";
+const get=(k,d=[])=>{
+ try{return JSON.parse(localStorage.getItem('mc_'+k))||d}
+ catch(e){return d}
+};
 
-/* DONNEES EXISTANTES */
-function get(k,d=[]){
- try{
-  const x=JSON.parse(localStorage.getItem(k));
-  return Array.isArray(x)?x:d;
- }catch(e){return d}
-}
+let products=get('products');
+let sales=get('sales');
+let expenses=get('expenses');
+let debts=get('debts');
+let clients=get('clients');
 
-let products=get('mc_products');
-let sales=get('mc_sales');
-let expenses=get('mc_expenses');
-let debts=get('mc_debts');
-let repayments=get('mc_repayments');
-
-function save(){
+const save=()=>{
  localStorage.setItem('mc_products',JSON.stringify(products));
  localStorage.setItem('mc_sales',JSON.stringify(sales));
  localStorage.setItem('mc_expenses',JSON.stringify(expenses));
  localStorage.setItem('mc_debts',JSON.stringify(debts));
- localStorage.setItem('mc_repayments',JSON.stringify(repayments));
-}
+ localStorage.setItem('mc_clients',JSON.stringify(clients));
+};
 
-debts.forEach(d=>{
- if(d.paid===undefined)d.paid=0;
- d.amount=Number(d.amount)||0;
- d.paid=Number(d.paid)||0;
-});
-save();
+const money=n=>Number(n||0).toLocaleString('fr-FR')+' FCFA';
+const today=()=>new Date().toISOString().slice(0,10);
 
-function money(n){
- return (Number(n)||0).toLocaleString('fr-FR')+' FCFA';
-}
-function today(){
- return new Date().toLocaleDateString('fr-FR');
-}
-function esc(s){
- return String(s??'').replace(/[&<>"']/g,c=>({
- '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
- })[c]);
-}
+const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({
+ '&':'&amp;','<':'&lt;','>':'&gt;',
+ '"':'&quot;',"'":'&#39;'
+})[c]);
+
 function page(name,btn){
  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
  if(btn)btn.classList.add('active');
+
  const pages={
  accueil:home,
  produits:showProducts,
  ventes:showSales,
  depenses:showExpenses,
  dettes:showDebts,
- historique:showHistory,
+ clients:showClients,
  sauvegarde:showBackup
  };
+
  if(pages[name])pages[name]();
 }
 
-/* ACCUEIL */
 function home(){
- const revenue=sales.reduce((a,s)=>a+(Number(s.total)||0),0);
- const spent=expenses.reduce((a,e)=>a+(Number(e.amount)||0),0);
- const owed=debts.reduce((a,d)=>a+Math.max(0,d.amount-d.paid),0);
- const stock=products.reduce((a,p)=>a+(Number(p.qty)||0),0);
+ const ca=sales.reduce((s,x)=>s+Number(x.total),0);
+ const dep=expenses.reduce((s,x)=>s+Number(x.amount),0);
+ const achats=sales.reduce((s,x)=>s+Number(x.cost||0),0);
+ const profit=ca-achats-dep;
+ const stock=products.reduce((s,p)=>s+Number(p.qty),0);
+ const unpaid=debts.reduce((s,d)=>s+Math.max(0,Number(d.amount)-Number(d.paid||0)),0);
 
  document.getElementById('app').innerHTML=`
- <h2>Tableau de bord</h2>
+ <h3>Tableau de bord</h3>
  <div class="stats">
- <div class="stat">Chiffre d'affaires<strong>${money(revenue)}</strong></div>
- <div class="stat">Dépenses<strong>${money(spent)}</strong></div>
- <div class="stat">Solde après dépenses<strong>${money(revenue-spent)}</strong></div>
- <div class="stat">Dettes restantes<strong>${money(owed)}</strong></div>
- <div class="stat">Produits en stock<strong>${stock}</strong></div>
- <div class="stat">Nombre de ventes<strong>${sales.length}</strong></div>
+  <div class="stat"><small>Chiffre d'affaires</small><strong>${money(ca)}</strong></div>
+  <div class="stat"><small>Bénéfice estimé</small><strong>${money(profit)}</strong></div>
+  <div class="stat"><small>Dépenses</small><strong>${money(dep)}</strong></div>
+  <div class="stat"><small>Dettes restantes</small><strong>${money(unpaid)}</strong></div>
+  <div class="stat"><small>Produits en stock</small><strong>${stock}</strong></div>
+  <div class="stat"><small>Nombre de ventes</small><strong>${sales.length}</strong></div>
  </div>
  <div class="card">
- <h2>Bienvenue dans MON COMMERCE</h2>
- <p>Gère ton commerce simplement et consulte tes opérations.</p>
+ <h3>Informations</h3>
+ <p>Produits enregistrés : <b>${products.length}</b></p>
+ <p>Clients enregistrés : <b>${clients.length}</b></p>
+ <p>Dépenses enregistrées : <b>${expenses.length}</b></p>
+ </div>
+ <div class="card">
+ <h3>Stock faible</h3>
+ ${products.filter(p=>Number(p.qty)<=5).map(p=>`<p>${safe(p.name)} : <b class="red">${p.qty} restant(s)</b></p>`).join('')||'<p class="empty">Aucun stock faible.</p>'}
  </div>`;
 }
 
-/* PRODUITS */
 function showProducts(){
  document.getElementById('app').innerHTML=`
+ <h3>Gestion des produits</h3>
  <div class="card">
- <h2>Ajouter un produit</h2>
+ <h3>Ajouter un produit</h3>
  <form onsubmit="addProduct(event)">
  <label>Nom du produit</label>
- <label>Prix d'achat (FCFA)</label>
-<input id="pcost" type="number" min="0" required>
- <input id="pname" required>
+ <input id="pname" required placeholder="Nom du produit">
  <label>Prix de vente (FCFA)</label>
  <input id="pprice" type="number" min="1" required>
+ <label>Prix d'achat (FCFA)</label>
+ <input id="pcost" type="number" min="0" value="0">
  <label>Quantité en stock</label>
  <input id="pqty" type="number" min="0" required>
- <button class="primary">Ajouter le produit</button>
+ <button class="action">Ajouter le produit</button>
  </form>
  </div>
- <div class="card"><h2>Mes produits (${products.length})</h2>
+ <div class="card">
+ <h3>Liste des produits</h3>
+ <div class="table-wrap"><table>
+ <tr><th>Produit</th><th>Prix vente</th><th>Stock</th><th>Actions</th></tr>
  ${products.map((p,i)=>`
- <div class="item">
- <strong>${esc(p.name)}</strong>
- <p>Achat : ${money(p.cost||0)} · Vente : ${money(p.price)} · Stock : ${p.qty}</p>
- <div class="actions">
- <button class="secondary" onclick="editProduct(${i})">Modifier</button>
- <button class="danger" onclick="delProduct(${i})">Supprimer</button>
- </div>
- </div>`).join('')||'Aucun produit enregistré.'}
+ <tr><td>${safe(p.name)}</td><td>${money(p.price)}</td>
+ <td>${p.qty}</td>
+ <td><button class="action" onclick="editProduct(${i})">Modifier</button>
+ <button class="action danger" onclick="deleteProduct(${i})">Supprimer</button></td></tr>
+ `).join('')}
+ </table></div>
+ ${products.length?'':'<p class="empty">Aucun produit enregistré.</p>'}
  </div>`;
 }
 
@@ -174,61 +173,65 @@ function addProduct(e){
  const price=Number(document.getElementById('pprice').value);
  const cost=Number(document.getElementById('pcost').value);
  const qty=Number(document.getElementById('pqty').value);
- if(!name||price<=0||cost<0||qty<0)
- products.push({name,cost,price,qty});
- save();
- alert('Produit ajouté !');
- showProducts();
+
+ if(!name||price<=0||cost<0||qty<0)return alert('Vérifie les informations.');
+
+ products.push({name,price,cost,qty});
+ save();showProducts();
 }
 
 function editProduct(i){
  const p=products[i];
- const costText=prompt('Prix d'achat',p.cost||0);
-if(costText===null)return;
-const cost=Number(costText);
  const name=prompt('Nom du produit',p.name);
  if(name===null)return;
  const price=Number(prompt('Prix de vente',p.price));
- if(!name.trim()||price<=0)return alert('Informations invalides.');
+ const cost=Number(prompt('Prix d’achat',p.cost||0));
  const qty=Number(prompt('Quantité en stock',p.qty));
- if(qty<0||!Number.isFinite(qty))return alert('Quantité invalide.');
- products[i]={...p,name:name.trim(),cost,price,qty};
- save();
- showProducts();
+
+ if(!name.trim()||price<=0||cost<0||qty<0)return alert('Informations incorrectes.');
+
+ products[i]={...p,name:name.trim(),price,cost,qty};
+ save();showProducts();
 }
 
-function delProduct(i){
- if(!confirm('Supprimer ce produit ?'))return;
- products.splice(i,1);
- save();
- showProducts();
+function deleteProduct(i){
+ if(confirm('Supprimer ce produit ?')){
+ products.splice(i,1);save();showProducts();
+ }
 }
 
-/* VENTES */
 function showSales(){
  document.getElementById('app').innerHTML=`
+ <h3>Gestion des ventes</h3>
  <div class="card">
- <h2>Enregistrer une vente</h2>
+ <h3>Enregistrer une vente</h3>
  <form onsubmit="addSale(event)">
  <label>Produit</label>
  <select id="sproduct" required>
  <option value="">Choisir un produit</option>
- ${products.map((p,i)=>`
- <option value="${i}">${esc(p.name)} - ${money(p.price)} (Stock ${p.qty})</option>
- `).join('')}
+ ${products.map((p,i)=>`<option value="${i}">${safe(p.name)} - ${money(p.price)} (Stock: ${p.qty})</option>`).join('')}
  </select>
- <label>Quantité vendue</label>
+ <label>Quantité</label>
  <input id="sqty" type="number" min="1" required>
- <button class="primary">Enregistrer la vente</button>
+ <label>Nom du client</label>
+ <input id="sclient" placeholder="Nom du client">
+ <label>Paiement</label>
+ <select id="spayment">
+ <option value="payee">Vente payée</option>
+ <option value="credit">Vente à crédit</option>
+ </select>
+ <button class="action">Enregistrer la vente</button>
  </form>
  </div>
- <div class="card"><h2>Historique des ventes</h2>
- ${sales.slice().reverse().map(s=>`
- <div class="item">
- <strong>${esc(s.name)}</strong>
- <p>${s.qty} unité(s) · ${money(s.total)}</p>
- <span class="small">${esc(s.date)}</span>
- </div>`).join('')||'Aucune vente.'}
+ <div class="card">
+ <h3>Historique des ventes</h3>
+ <div class="table-wrap"><table>
+ <tr><th>Date</th><th>Produit</th><th>Client</th><th>Total</th><th>Paiement</th></tr>
+ ${sales.map(s=>`<tr><td>${safe(s.date)}</td><td>${safe(s.product)}</td>
+ <td>${safe(s.client||'-')}</td><td>${money(s.total)}</td>
+ <td>${s.payment==='credit'?'À crédit':'Payée'}</td></tr>`).join('')}
+ </table></div>
+ ${sales.length?'':'<p class="empty">Aucune vente enregistrée.</p>'}
  </div>`;
 }
 
@@ -236,36 +239,53 @@ function addSale(e){
  e.preventDefault();
  const i=Number(document.getElementById('sproduct').value);
  const qty=Number(document.getElementById('sqty').value);
+ const client=document.getElementById('sclient').value.trim();
+ const payment=document.getElementById('spayment').value;
  const p=products[i];
- if(!p||qty<=0||qty>Number(p.qty))return alert('Stock insuffisant.');
- const total=Number(p.price)*qty;
- p.qty=Number(p.qty)-qty;
- sales.push({name:p.name,qty,total,date:today()});
- save();
- alert('Vente enregistrée : '+money(total));
- showSales();
+
+ if(!p||qty<=0||qty>p.qty)return alert('Stock insuffisant ou produit incorrect.');
+
+ const total=p.price*qty;
+ const cost=(p.cost||0)*qty;
+
+ p.qty-=qty;
+
+ sales.push({
+ product:p.name,qty,total,cost,client,
+ payment,date:today()
+ });
+
+ if(payment==='credit'){
+  let c=clients.find(x=>x.name.toLowerCase()===client.toLowerCase());
+  if(!client)return alert('Ajoute le nom du client pour une vente à crédit.');
+  if(!c){clients.push({name:client,phone:''});}
+  debts.push({client,amount:total,paid:0,date:today(),description:'Vente de '+p.name});
+ }
+
+ save();showSales();
 }
 
-/* DEPENSES */
 function showExpenses(){
  document.getElementById('app').innerHTML=`
+ <h3>Gestion des dépenses</h3>
  <div class="card">
- <h2>Ajouter une dépense</h2>
+ <h3>Ajouter une dépense</h3>
  <form onsubmit="addExpense(event)">
- <label>Motif</label>
- <input id="ename" required>
+ <label>Motif de la dépense</label>
+ <input id="ename" required placeholder="Exemple : Transport">
  <label>Montant (FCFA)</label>
  <input id="eamount" type="number" min="1" required>
- <button class="primary">Enregistrer la dépense</button>
+ <button class="action">Enregistrer la dépense</button>
  </form>
  </div>
- <div class="card"><h2>Mes dépenses</h2>
- ${expenses.slice().reverse().map(e=>`
- <div class="item">
- <strong>${esc(e.name)}</strong>
- <p class="red">${money(e.amount)}</p>
- <span class="small">${esc(e.date)}</span>
- </div>`).join('')||'Aucune dépense.'}
+ <div class="card">
+ <h3>Historique des dépenses</h3>
+ <div class="table-wrap"><table>
+ <tr><th>Date</th><th>Motif</th><th>Montant</th><th>Action</th></tr>
+ ${expenses.map((x,i)=>`<tr><td>${safe(x.date)}</td><td>${safe(x.name)}</td>
+ <td>${money(x.amount)}</td><td><button class="action danger" onclick="deleteExpense(${i})">Supprimer</button></td></tr>`).join('')}
+ </table></div>
+ ${expenses.length?'':'<p class="empty">Aucune dépense.</p>'}
  </div>`;
 }
 
@@ -275,138 +295,207 @@ function addExpense(e){
  const amount=Number(document.getElementById('eamount').value);
  if(!name||amount<=0)return;
  expenses.push({name,amount,date:today()});
- save();
- alert('Dépense enregistrée.');
- showExpenses();
+ save();showExpenses();
 }
 
-/* DETTES ET REMBOURSEMENTS */
+function deleteExpense(i){
+ if(confirm('Supprimer cette dépense ?')){
+ expenses.splice(i,1);save();showExpenses();
+ }
+}
+
 function showDebts(){
- const total=debts.reduce((a,d)=>a+Math.max(0,d.amount-d.paid),0);
+ const remaining=d=>Math.max(0,Number(d.amount)-Number(d.paid||0));
+
  document.getElementById('app').innerHTML=`
+ <h3>Gestion des dettes</h3>
  <div class="card">
- <h2>Ajouter une dette client</h2>
+ <h3>Ajouter une dette</h3>
  <form onsubmit="addDebt(event)">
  <label>Nom du client</label>
- <input id="dname" required>
+ <input id="dclient" required placeholder="Nom du client">
  <label>Montant de la dette (FCFA)</label>
  <input id="damount" type="number" min="1" required>
- <button class="primary">Ajouter la dette</button>
+ <label>Description</label>
+ <input id="ddescription" placeholder="Description">
+ <button class="action">Ajouter la dette</button>
  </form>
  </div>
  <div class="card">
- <h2>Dettes restantes : ${money(total)}</h2>
- ${debts.map((d,i)=>{
- const rest=Math.max(0,d.amount-d.paid);
- return `<div class="item">
- <strong>${esc(d.name)}</strong>
- <p>Dette initiale : ${money(d.amount)}</p>
- <p>Déjà payé : ${money(d.paid)}</p>
- <p class="${rest?'red':'green'}">Reste à payer : ${money(rest)}</p>
- ${rest>0?
- `<button class="primary" onclick="repayDebt(${i})">Rembourser</button>`:
- '<strong class="green">Dette remboursée</strong>'}
- </div>`;
- }).join('')||'Aucune dette enregistrée.'}
+ <h3>Liste des dettes</h3>
+ <div class="table-wrap"><table>
+ <tr><th>Client</th><th>Dette</th><th>Payé</th><th>Reste</th><th>Actions</th></tr>
+ ${debts.map((d,i)=>`
+ <tr><td>${safe(d.client)}</td>
+ <td>${money(d.amount)}</td><td>${money(d.paid||0)}</td>
+ <td>${money(remaining(d))}</td>
+ <td>
+ <button class="action" onclick="repayDebt(${i})">Rembourser</button>
+ <button class="action danger" onclick="deleteDebt(${i})">Supprimer</button>
+ </td></tr>`).join('')}
+ </table></div>
+ ${debts.length?'':'<p class="empty">Aucune dette enregistrée.</p>'}
+ </div>
+ <div class="card">
+ <b>Total des dettes restantes : ${money(debts.reduce((s,d)=>s+remaining(d),0))}</b>
  </div>`;
 }
 
 function addDebt(e){
  e.preventDefault();
- const name=document.getElementById('dname').value.trim();
+ const client=document.getElementById('dclient').value.trim();
  const amount=Number(document.getElementById('damount').value);
- if(!name||amount<=0)return;
- debts.push({name,amount,paid:0,date:today()});
- save();
- alert('Dette enregistrée.');
- showDebts();
+ const description=document.getElementById('ddescription').value.trim();
+
+ if(!client||amount<=0)return;
+
+ debts.push({client,amount,paid:0,description,date:today()});
+ if(!clients.some(c=>c.name.toLowerCase()===client.toLowerCase())){
+  clients.push({name:client,phone:''});
+ }
+ save();showDebts();
 }
 
 function repayDebt(i){
  const d=debts[i];
- if(!d)return;
- const remaining=d.amount-d.paid;
- const amount=Number(prompt('Montant à rembourser. Reste : '+money(remaining)));
+ const remaining=d.amount-(d.paid||0);
+ const amount=Number(prompt(
+ 'Montant du remboursement en FCFA. Reste à payer : '+remaining,
+ remaining
+ ));
+
  if(!Number.isFinite(amount)||amount<=0)return;
  if(amount>remaining)return alert('Le montant dépasse la dette restante.');
- d.paid+=amount;
- repayments.push({name:d.name,amount,date:today()});
- save();
- alert('Remboursement enregistré : '+money(amount));
- showDebts();
+
+ d.paid=(d.paid||0)+amount;
+ if(d.paid>=d.amount)d.paid=d.amount;
+
+ save();showDebts();
+ alert('Remboursement enregistré avec succès.');
 }
 
-/* HISTORIQUE */
-function showHistory(){
- const items=[
- ...sales.map(x=>({...x,type:'Vente',amount:x.total})),
- ...expenses.map(x=>({...x,type:'Dépense'})),
- ...debts.map(x=>({...x,type:'Dette ajoutée',amount:x.amount})),
- ...repayments.map(x=>({...x,type:'Remboursement'}))
- ];
+function deleteDebt(i){
+ if(confirm('Supprimer cette dette ?')){
+ debts.splice(i,1);save();showDebts();
+ }
+}
+
+function showClients(){
  document.getElementById('app').innerHTML=`
- <div class="card"><h2>Historique des opérations</h2>
- ${items.slice().reverse().map(x=>`
- <div class="item">
- <strong>${esc(x.type)} : ${esc(x.name)}</strong>
- <p>${money(x.amount)} · ${esc(x.date)}</p>
- </div>`).join('')||'Aucune opération.'}
+ <h3>Gestion des clients</h3>
+ <div class="card">
+ <h3>Ajouter un client</h3>
+ <form onsubmit="addClient(event)">
+ <label>Nom du client</label>
+ <input id="cname" required>
+ <label>Téléphone</label>
+ <input id="cphone" type="tel">
+ <button class="action">Ajouter le client</button>
+ </form>
+ </div>
+ <div class="card">
+ <h3>Liste des clients</h3>
+ <div class="table-wrap"><table>
+ <tr><th>Nom</th><th>Téléphone</th><th>Actions</th></tr>
+ ${clients.map((c,i)=>`<tr><td>${safe(c.name)}</td><td>${safe(c.phone||'-')}</td>
+ <td><button class="action danger" onclick="deleteClient(${i})">Supprimer</button></td></tr>`).join('')}
+ </table></div>
+ ${clients.length?'':'<p class="empty">Aucun client enregistré.</p>'}
  </div>`;
 }
 
-/* SAUVEGARDE */
+function addClient(e){
+ e.preventDefault();
+ const name=document.getElementById('cname').value.trim();
+ const phone=document.getElementById('cphone').value.trim();
+ if(!name)return;
+ if(clients.some(c=>c.name.toLowerCase()===name.toLowerCase()))
+ return alert('Ce client existe déjà.');
+ clients.push({name,phone});
+ save();showClients();
+}
+
+function deleteClient(i){
+ if(confirm('Supprimer ce client ?')){
+ clients.splice(i,1);save();showClients();
+ }
+}
+
 function showBackup(){
  document.getElementById('app').innerHTML=`
+ <h3>Sauvegarde et restauration</h3>
  <div class="card">
- <h2>Sauvegarder mes données</h2>
- <p>Télécharge une copie de tes produits, ventes, dépenses et dettes.</p>
- <button class="primary" onclick="backup()">Télécharger ma sauvegarde</button>
+ <h3>Sauvegarder mes données</h3>
+ <p>Télécharge une copie de tes produits, ventes, dépenses, dettes et clients.</p>
+ <button class="action" onclick="backup()">Télécharger la sauvegarde</button>
  </div>
  <div class="card">
- <h2>Restaurer une sauvegarde</h2>
- <input type="file" id="restorefile" accept=".json">
- <button class="primary" onclick="restore()">Restaurer mes données</button>
+ <h3>Restaurer mes données</h3>
+ <p>Choisis un fichier de sauvegarde déjà téléchargé.</p>
+ <input type="file" id="restoreFile" accept=".json">
+ <button class="action" onclick="restore()">Restaurer</button>
+ </div>
+ <div class="card">
+ <h3>Effacer toutes les données</h3>
+ <p class="red">Attention : cette action est définitive.</p>
+ <button class="action danger" onclick="clearData()">Tout effacer</button>
  </div>`;
 }
 
 function backup(){
- save();
- const data={products,sales,expenses,debts,repayments};
+ const data={products,sales,expenses,debts,clients};
  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
  const url=URL.createObjectURL(blob);
  const a=document.createElement('a');
  a.href=url;
- a.download='MON-COMMERCE-SAUVEGARDE.json';
+ a.download='mon-commerce-sauvegarde.json';
  a.click();
- setTimeout(()=>URL.revokeObjectURL(url),1000);
+ URL.revokeObjectURL(url);
 }
 
 function restore(){
- const file=document.getElementById('restorefile').files[0];
+ const file=document.getElementById('restoreFile').files[0];
  if(!file)return alert('Choisis un fichier.');
  const reader=new FileReader();
- reader.onload=()=>{
- try{
-  const d=JSON.parse(reader.result);
-  if(!Array.isArray(d.products)||!Array.isArray(d.sales)||
-     !Array.isArray(d.expenses)||!Array.isArray(d.debts))
-   return alert('Fichier invalide.');
-  if(!confirm('Remplacer les données actuelles par cette sauvegarde ?'))return;
-  products=d.products;
-  sales=d.sales;
-  expenses=d.expenses;
-  debts=d.debts;
-  repayments=Array.isArray(d.repayments)?d.repayments:[];
-  save();
-  alert('Sauvegarde restaurée.');
-  home();
- }catch(e){alert('Fichier de sauvegarde invalide.');}
+
+ reader.onload=function(){
+  try{
+   const data=JSON.parse(reader.result);
+   if(!data||!Array.isArray(data.products)||!Array.isArray(data.sales)||
+      !Array.isArray(data.expenses)||!Array.isArray(data.debts)||
+      !Array.isArray(data.clients))throw new Error();
+
+   products=data.products;
+   sales=data.sales;
+   expenses=data.expenses;
+   debts=data.debts;
+   clients=data.clients;
+   save();
+   home();
+   alert('Sauvegarde restaurée.');
+  }catch(e){
+   alert('Fichier de sauvegarde invalide.');
+  }
  };
  reader.readAsText(file);
+}
+
+function clearData(){
+ if(!confirm('Veux-tu vraiment effacer toutes les données ?'))return;
+ if(!confirm('Dernière confirmation : cette action est irréversible.'))return;
+
+ products=[];
+ sales=[];
+ expenses=[];
+ debts=[];
+ clients=[];
+ save();
+ home();
 }
 
 /* DEMARRAGE */
 home();
 </script>
 </body>
-</html>
+ </html>
+ 
