@@ -192,7 +192,7 @@ const cost=Number(costText);
  if(!name.trim()||price<=0)return alert('Informations invalides.');
  const qty=Number(prompt('Quantité en stock',p.qty));
  if(qty<0||!Number.isFinite(qty))return alert('Quantité invalide.');
- products[i]={...p,name:name.trim(),price,qty};
+ products[i]={...p,name:name.trim(),cost,price,qty};
  save();
  showProducts();
 }
