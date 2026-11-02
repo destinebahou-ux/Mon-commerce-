@@ -159,7 +159,7 @@ function showProducts(){
  ${products.map((p,i)=>`
  <div class="item">
  <strong>${esc(p.name)}</strong>
- <p>${money(p.price)} · Stock : ${p.qty}</p>
+ <p>Achat : ${money(p.cost||0)} · Vente : ${money(p.price)} · Stock : ${p.qty}</p>
  <div class="actions">
  <button class="secondary" onclick="editProduct(${i})">Modifier</button>
  <button class="danger" onclick="delProduct(${i})">Supprimer</button>
