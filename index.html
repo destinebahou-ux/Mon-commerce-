@@ -46,7 +46,12 @@ function addProduct(){let name=pname.value.trim(),price=+pprice.value,qty=+pqty.
 function addSale(){let i=+saleProduct.value,q=+saleQty.value,p=products[i];if(!p||q<1||q>p.qty)return alert('Stock insuffisant ou quantité invalide.');p.qty-=q;sales.push({name:p.name,qty:q,total:q*p.price,date:new Date().toLocaleString('fr-FR')});save()}
 function addExpense(){let n=expenseName.value.trim(),a=+expenseAmount.value;if(!n||a<=0)return alert('Remplissez les champs.');expenses.push({name:n,amount:a,date:new Date().toLocaleString('fr-FR')});expenseName.value=expenseAmount.value='';save()}
 function addDebt(){let n=debtName.value.trim(),a=+debtAmount.value;if(!n||a<=0)return alert('Remplissez les champs.');debts.push({name:n,amount:a,date:new Date().toLocaleDateString('fr-FR')});debtName.value=debtAmount.value='';save()}
-  function repayDebt(i){
+  function repayDebt(i){let a=+prompt('Combien le client rembourse-t-il ?');
+if(!a||a<=0)return;
+if(a>debts[i].amount)return alert('Montant supérieur à la dette.');
+debts[i].amount-=a;
+if(debts[i].amount===0)debts.splice(i,1);
+save();
  let a=+prompt('Combien le client rembourse-t-il ?');
  if(!a||a<=0)return;
  if(a>debts[i].amount)return alert('Montant supérieur à la dette.');
