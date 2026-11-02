@@ -183,6 +183,9 @@ function addProduct(e){
 
 function editProduct(i){
  const p=products[i];
+ const costText=prompt('Prix d'achat',p.cost||0);
+if(costText===null)return;
+const cost=Number(costText);
  const name=prompt('Nom du produit',p.name);
  if(name===null)return;
  const price=Number(prompt('Prix de vente',p.price));
