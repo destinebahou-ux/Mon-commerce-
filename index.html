@@ -174,7 +174,7 @@ function addProduct(e){
  const price=Number(document.getElementById('pprice').value);
  const cost=Number(document.getElementById('pcost').value);
  const qty=Number(document.getElementById('pqty').value);
- if(!name||price<=0||qty<0)return alert('Vérifie les informations.');
+ if(!name||price<=0||cost<0||qty<0)
  products.push({name,price,qty});
  save();
  alert('Produit ajouté !');
