@@ -145,6 +145,8 @@ function showProducts(){
  <h2>Ajouter un produit</h2>
  <form onsubmit="addProduct(event)">
  <label>Nom du produit</label>
+ <label>Prix d'achat (FCFA)</label>
+<input id="pcost" type="number" min="0" required>
  <input id="pname" required>
  <label>Prix de vente (FCFA)</label>
  <input id="pprice" type="number" min="1" required>
