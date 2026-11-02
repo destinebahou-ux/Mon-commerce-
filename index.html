@@ -172,6 +172,7 @@ function addProduct(e){
  e.preventDefault();
  const name=document.getElementById('pname').value.trim();
  const price=Number(document.getElementById('pprice').value);
+ const cost=Number(document.getElementById('pcost').value);
  const qty=Number(document.getElementById('pqty').value);
  if(!name||price<=0||qty<0)return alert('Vérifie les informations.');
  products.push({name,price,qty});
