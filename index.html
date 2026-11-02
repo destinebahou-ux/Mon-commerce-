@@ -1,66 +1,406 @@
-<!doctype html>
+
+<!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#14532d"><link rel="manifest" href="manifest.webmanifest">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#123c32">
 <title>MON COMMERCE</title>
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f3f6f3;color:#17251b}
-header{background:#14532d;color:white;padding:22px 16px}h1{margin:0;font-size:25px}header p{margin:6px 0 0}
-main{max-width:850px;margin:auto;padding:14px}.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.card,.panel{background:white;border-radius:12px;padding:14px;margin:10px 0;box-shadow:0 1px 5px #0001}
-.stat strong{display:block;font-size:22px;margin-top:7px;color:#14532d}
-h2{font-size:18px;margin:4px 0 12px}label{display:block;font-size:14px;margin:9px 0 4px}
-input,button{font:inherit;padding:11px;border-radius:8px;width:100%;border:1px solid #ccd5ce}
-button{background:#14532d;color:white;border:0;font-weight:bold;margin-top:10px;cursor:pointer}
-button.secondary{background:#e7efe9;color:#14532d}.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.item{border-top:1px solid #eee;padding:9px 0;font-size:14px}.muted{color:#66736a;font-size:13px}
-nav{display:flex;gap:7px;flex-wrap:wrap}nav button{width:auto;flex:1;min-width:90px}
-section{display:none}section.active{display:block}
-</style></head><body>
-<header><h1>MON COMMERCE</h1><p>Gérez votre petit commerce simplement.</p></header>
-<main>
-<div class="stats">
-<div class="card stat">Ventes totales<strong id="salesTotal">0 F</strong></div>
-<div class="card stat">Dépenses<strong id="expensesTotal">0 F</strong></div>
-<div class="card stat">Bénéfice estimé<strong id="profitTotal">0 F</strong></div>
-<div class="card stat">Articles en stock<strong id="stockCount">0</strong></div>
-</div>
-<nav><button onclick="show('products')">Produits</button><button onclick="show('sales')">Ventes</button><button onclick="show('expenses')">Dépenses</button><button onclick="show('debts')">Dettes</button></nav>
-<section id="products" class="active panel"><h2>Ajouter un produit</h2>
-<label>Nom du produit</label><input id="pname" placeholder="Ex. Riz 1 kg">
-<div class="row"><div><label>Prix de vente (F CFA)</label><input id="pprice" type="number" min="0"></div><div><label>Quantité en stock</label><input id="pqty" type="number" min="0"></div></div>
-<button onclick="addProduct()">Ajouter le produit</button><h2>Mes produits</h2><div id="productList"></div></section>
-<section id="sales" class="panel"><h2>Enregistrer une vente</h2><label>Produit</label><select id="saleProduct"></select><label>Quantité vendue</label><input id="saleQty" type="number" min="1" value="1"><button onclick="addSale()">Enregistrer la vente</button><div id="saleList"></div></section>
-<section id="expenses" class="panel"><h2>Ajouter une dépense</h2><label>Motif</label><input id="expenseName" placeholder="Ex. Transport"><label>Montant (F CFA)</label><input id="expenseAmount" type="number" min="0"><button onclick="addExpense()">Enregistrer la dépense</button><div id="expenseList"></div></section>
-<section id="debts" class="panel"><h2>Suivre une dette client</h2><label>Nom du client</label><input id="debtName"><label>Montant dû (F CFA)</label><input id="debtAmount" type="number" min="0"><button onclick="addDebt()">Ajouter la dette</button><div id="debtList"></div></section>
-<div class="panel"><h2>Sauvegarde</h2><p class="muted">Les données restent sur cet appareil. Téléchargez régulièrement une sauvegarde pour ne pas les perdre.</p><button class="secondary" onclick="backup()">Exporter mes données</button></div>
-</main>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f2f5f3;color:#17251f}
+header{background:#123c32;color:white;padding:20px}
+header h1{margin:0;font-size:25px}
+header p{margin:6px 0 0}
+nav{display:flex;overflow-x:auto;background:white;padding:8px;gap:6px;position:sticky;top:0;z-index:2}
+nav button{border:0;background:#e9efeb;padding:12px;border-radius:8px;white-space:nowrap}
+nav button.active{background:#123c32;color:white}
+main{padding:14px;max-width:750px;margin:auto}
+.card{background:white;border-radius:12px;padding:15px;margin-bottom:13px;box-shadow:0 2px 7px #0001}
+h2{font-size:19px}
+input,select{width:100%;padding:13px;margin:7px 0 12px;border:1px solid #ccd5ce;border-radius:8px;font-size:16px}
+label{font-size:14px;font-weight:bold}
+.primary{background:#123c32;color:white;border:0;padding:13px;border-radius:8px;width:100%;font-size:16px}
+.danger{background:#b72e2e;color:white;border:0;padding:9px;border-radius:7px}
+.secondary{background:#e9efeb;border:0;padding:9px;border-radius:7px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:#e9f3ed;padding:14px;border-radius:10px}
+.stat strong{display:block;font-size:19px;margin-top:7px;overflow-wrap:anywhere}
+.item{border-bottom:1px solid #eee;padding:12px 0}
+.item:last-child{border:0}
+.green{color:#137444}
+.red{color:#b72e2e}
+.small{font-size:13px;color:#66756c}
+.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+.actions button{padding:9px;border:0;border-radius:7px}
+</style>
+</head>
+<body>
+
+<header>
+<h1>MON COMMERCE</h1>
+<p>La gestion simple de ton commerce</p>
+</header>
+
+<nav>
+<button class="active" onclick="page('accueil',this)">Accueil</button>
+<button onclick="page('produits',this)">Produits</button>
+<button onclick="page('ventes',this)">Ventes</button>
+<button onclick="page('depenses',this)">Dépenses</button>
+<button onclick="page('dettes',this)">Dettes</button>
+<button onclick="page('historique',this)">Historique</button>
+<button onclick="page('sauvegarde',this)">Sauvegarde</button>
+</nav>
+
+<main id="app"></main>
+<footer style="text-align:center;padding:20px;color:#78847d">
+MON COMMERCE
+</footer>
+
 <script>
-const get=(k,d=[])=>JSON.parse(localStorage.getItem(k)||JSON.stringify(d));
-let products=get('mc_products'),sales=get('mc_sales'),expenses=get('mc_expenses'),debts=get('mc_debts');
-const money=n=>Math.round(n).toLocaleString('fr-FR')+' F CFA';
-function save(){localStorage.setItem('mc_products',JSON.stringify(products));localStorage.setItem('mc_sales',JSON.stringify(sales));localStorage.setItem('mc_expenses',JSON.stringify(expenses));localStorage.setItem('mc_debts',JSON.stringify(debts));render()}
-function show(id){document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')}
-function addProduct(){let name=pname.value.trim(),price=+pprice.value,qty=+pqty.value;if(!name||price<=0||qty<0)return alert('Remplissez correctement les champs.');products.push({name,price,qty});pname.value=pprice.value=pqty.value='';save()}
-function addSale(){let i=+saleProduct.value,q=+saleQty.value,p=products[i];if(!p||q<1||q>p.qty)return alert('Stock insuffisant ou quantité invalide.');p.qty-=q;sales.push({name:p.name,qty:q,total:q*p.price,date:new Date().toLocaleString('fr-FR')});save()}
-function addExpense(){let n=expenseName.value.trim(),a=+expenseAmount.value;if(!n||a<=0)return alert('Remplissez les champs.');expenses.push({name:n,amount:a,date:new Date().toLocaleString('fr-FR')});expenseName.value=expenseAmount.value='';save()}
-function addDebt(){let n=debtName.value.trim(),a=+debtAmount.value;if(!n||a<=0)return alert('Remplissez les champs.');debts.push({name:n,amount:a,date:new Date().toLocaleDateString('fr-FR')});debtName.value=debtAmount.value='';save()}
-  function repayDebt(i){let a=+prompt('Combien le client rembourse-t-il ?');
-if(!a||a<=0)return;
-if(a>debts[i].amount)return alert('Montant supérieur à la dette.');
-debts[i].amount-=a;
-if(debts[i].amount===0)debts.splice(i,1);
+"use strict";
+
+/* DONNEES EXISTANTES */
+function get(k,d=[]){
+ try{
+  const x=JSON.parse(localStorage.getItem(k));
+  return Array.isArray(x)?x:d;
+ }catch(e){return d}
+}
+
+let products=get('mc_products');
+let sales=get('mc_sales');
+let expenses=get('mc_expenses');
+let debts=get('mc_debts');
+let repayments=get('mc_repayments');
+
+function save(){
+ localStorage.setItem('mc_products',JSON.stringify(products));
+ localStorage.setItem('mc_sales',JSON.stringify(sales));
+ localStorage.setItem('mc_expenses',JSON.stringify(expenses));
+ localStorage.setItem('mc_debts',JSON.stringify(debts));
+ localStorage.setItem('mc_repayments',JSON.stringify(repayments));
+}
+
+debts.forEach(d=>{
+ if(d.paid===undefined)d.paid=0;
+ d.amount=Number(d.amount)||0;
+ d.paid=Number(d.paid)||0;
+});
 save();
- let a=+prompt('Combien le client rembourse-t-il ?');
- if(!a||a<=0)return;
- if(a>debts[i].amount)return alert('Montant supérieur à la dette.');
- debts[i].amount-=a;
- if(debts[i].amount===0)debts.splice(i,1);
+
+function money(n){
+ return (Number(n)||0).toLocaleString('fr-FR')+' FCFA';
+}
+function today(){
+ return new Date().toLocaleDateString('fr-FR');
+}
+function esc(s){
+ return String(s??'').replace(/[&<>"']/g,c=>({
+ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+ })[c]);
+}
+function page(name,btn){
+ document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+ if(btn)btn.classList.add('active');
+ const pages={
+ accueil:home,
+ produits:showProducts,
+ ventes:showSales,
+ depenses:showExpenses,
+ dettes:showDebts,
+ historique:showHistory,
+ sauvegarde:showBackup
+ };
+ if(pages[name])pages[name]();
+}
+
+/* ACCUEIL */
+function home(){
+ const revenue=sales.reduce((a,s)=>a+(Number(s.total)||0),0);
+ const spent=expenses.reduce((a,e)=>a+(Number(e.amount)||0),0);
+ const owed=debts.reduce((a,d)=>a+Math.max(0,d.amount-d.paid),0);
+ const stock=products.reduce((a,p)=>a+(Number(p.qty)||0),0);
+
+ document.getElementById('app').innerHTML=`
+ <h2>Tableau de bord</h2>
+ <div class="stats">
+ <div class="stat">Chiffre d'affaires<strong>${money(revenue)}</strong></div>
+ <div class="stat">Dépenses<strong>${money(spent)}</strong></div>
+ <div class="stat">Solde après dépenses<strong>${money(revenue-spent)}</strong></div>
+ <div class="stat">Dettes restantes<strong>${money(owed)}</strong></div>
+ <div class="stat">Produits en stock<strong>${stock}</strong></div>
+ <div class="stat">Nombre de ventes<strong>${sales.length}</strong></div>
+ </div>
+ <div class="card">
+ <h2>Bienvenue dans MON COMMERCE</h2>
+ <p>Gère ton commerce simplement et consulte tes opérations.</p>
+ </div>`;
+}
+
+/* PRODUITS */
+function showProducts(){
+ document.getElementById('app').innerHTML=`
+ <div class="card">
+ <h2>Ajouter un produit</h2>
+ <form onsubmit="addProduct(event)">
+ <label>Nom du produit</label>
+ <input id="pname" required>
+ <label>Prix de vente (FCFA)</label>
+ <input id="pprice" type="number" min="1" required>
+ <label>Quantité en stock</label>
+ <input id="pqty" type="number" min="0" required>
+ <button class="primary">Ajouter le produit</button>
+ </form>
+ </div>
+ <div class="card"><h2>Mes produits (${products.length})</h2>
+ ${products.map((p,i)=>`
+ <div class="item">
+ <strong>${esc(p.name)}</strong>
+ <p>${money(p.price)} · Stock : ${p.qty}</p>
+ <div class="actions">
+ <button class="secondary" onclick="editProduct(${i})">Modifier</button>
+ <button class="danger" onclick="delProduct(${i})">Supprimer</button>
+ </div>
+ </div>`).join('')||'Aucun produit enregistré.'}
+ </div>`;
+}
+
+function addProduct(e){
+ e.preventDefault();
+ const name=document.getElementById('pname').value.trim();
+ const price=Number(document.getElementById('pprice').value);
+ const qty=Number(document.getElementById('pqty').value);
+ if(!name||price<=0||qty<0)return alert('Vérifie les informations.');
+ products.push({name,price,qty});
  save();
-  }
-function backup(){let blob=new Blob([JSON.stringify({products,sales,expenses,debts},null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='mon-commerce-sauvegarde.json';a.click();URL.revokeObjectURL(a.href)}
-function render(){productList.innerHTML=products.map((p,i)=>`<div class="item"><b>${p.name}</b> — ${money(p.price)} · Stock : ${p.qty} <button class="secondary" onclick="delProduct(${i})">Supprimer</button></div>`).join('')||'<p class="muted">Aucun produit pour le moment.</p>';saleProduct.innerHTML=products.map((p,i)=>`<option value="${i}">${p.name} (${p.qty} en stock)</option>`).join('');saleList.innerHTML=sales.slice().reverse().map(s=>`<div class="item">${s.date} — ${s.name} × ${s.qty} : <b>${money(s.total)}</b></div>`).join('');expenseList.innerHTML=expenses.slice().reverse().map(e=>`<div class="item">${e.date} — ${e.name} : ${money(e.amount)}</div>`).join('');debtList.innerHTML=debts.map((d,i)=>`<div class="item">${d.name} doit <b>${money(d.amount)}</b> <button onclick="repayDebt(${i})">Rembourser</button></div>`).join('');;let st=sales.reduce((a,s)=>a+s.total,0),ex=expenses.reduce((a,e)=>a+e.amount,0);salesTotal.textContent=money(st);expensesTotal.textContent=money(ex);profitTotal.textContent=money(st-ex);stockCount.textContent=products.reduce((a,p)=>a+p.qty,0)}
-function delProduct(i){if(confirm('Supprimer ce produit ?')){products.splice(i,1);save()}}
-render();if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
-</script></body></html>
+ alert('Produit ajouté !');
+ showProducts();
+}
+
+function editProduct(i){
+ const p=products[i];
+ const name=prompt('Nom du produit',p.name);
+ if(name===null)return;
+ const price=Number(prompt('Prix de vente',p.price));
+ if(!name.trim()||price<=0)return alert('Informations invalides.');
+ const qty=Number(prompt('Quantité en stock',p.qty));
+ if(qty<0||!Number.isFinite(qty))return alert('Quantité invalide.');
+ products[i]={...p,name:name.trim(),price,qty};
+ save();
+ showProducts();
+}
+
+function delProduct(i){
+ if(!confirm('Supprimer ce produit ?'))return;
+ products.splice(i,1);
+ save();
+ showProducts();
+}
+
+/* VENTES */
+function showSales(){
+ document.getElementById('app').innerHTML=`
+ <div class="card">
+ <h2>Enregistrer une vente</h2>
+ <form onsubmit="addSale(event)">
+ <label>Produit</label>
+ <select id="sproduct" required>
+ <option value="">Choisir un produit</option>
+ ${products.map((p,i)=>`
+ <option value="${i}">${esc(p.name)} - ${money(p.price)} (Stock ${p.qty})</option>
+ `).join('')}
+ </select>
+ <label>Quantité vendue</label>
+ <input id="sqty" type="number" min="1" required>
+ <button class="primary">Enregistrer la vente</button>
+ </form>
+ </div>
+ <div class="card"><h2>Historique des ventes</h2>
+ ${sales.slice().reverse().map(s=>`
+ <div class="item">
+ <strong>${esc(s.name)}</strong>
+ <p>${s.qty} unité(s) · ${money(s.total)}</p>
+ <span class="small">${esc(s.date)}</span>
+ </div>`).join('')||'Aucune vente.'}
+ </div>`;
+}
+
+function addSale(e){
+ e.preventDefault();
+ const i=Number(document.getElementById('sproduct').value);
+ const qty=Number(document.getElementById('sqty').value);
+ const p=products[i];
+ if(!p||qty<=0||qty>Number(p.qty))return alert('Stock insuffisant.');
+ const total=Number(p.price)*qty;
+ p.qty=Number(p.qty)-qty;
+ sales.push({name:p.name,qty,total,date:today()});
+ save();
+ alert('Vente enregistrée : '+money(total));
+ showSales();
+}
+
+/* DEPENSES */
+function showExpenses(){
+ document.getElementById('app').innerHTML=`
+ <div class="card">
+ <h2>Ajouter une dépense</h2>
+ <form onsubmit="addExpense(event)">
+ <label>Motif</label>
+ <input id="ename" required>
+ <label>Montant (FCFA)</label>
+ <input id="eamount" type="number" min="1" required>
+ <button class="primary">Enregistrer la dépense</button>
+ </form>
+ </div>
+ <div class="card"><h2>Mes dépenses</h2>
+ ${expenses.slice().reverse().map(e=>`
+ <div class="item">
+ <strong>${esc(e.name)}</strong>
+ <p class="red">${money(e.amount)}</p>
+ <span class="small">${esc(e.date)}</span>
+ </div>`).join('')||'Aucune dépense.'}
+ </div>`;
+}
+
+function addExpense(e){
+ e.preventDefault();
+ const name=document.getElementById('ename').value.trim();
+ const amount=Number(document.getElementById('eamount').value);
+ if(!name||amount<=0)return;
+ expenses.push({name,amount,date:today()});
+ save();
+ alert('Dépense enregistrée.');
+ showExpenses();
+}
+
+/* DETTES ET REMBOURSEMENTS */
+function showDebts(){
+ const total=debts.reduce((a,d)=>a+Math.max(0,d.amount-d.paid),0);
+ document.getElementById('app').innerHTML=`
+ <div class="card">
+ <h2>Ajouter une dette client</h2>
+ <form onsubmit="addDebt(event)">
+ <label>Nom du client</label>
+ <input id="dname" required>
+ <label>Montant de la dette (FCFA)</label>
+ <input id="damount" type="number" min="1" required>
+ <button class="primary">Ajouter la dette</button>
+ </form>
+ </div>
+ <div class="card">
+ <h2>Dettes restantes : ${money(total)}</h2>
+ ${debts.map((d,i)=>{
+ const rest=Math.max(0,d.amount-d.paid);
+ return `<div class="item">
+ <strong>${esc(d.name)}</strong>
+ <p>Dette initiale : ${money(d.amount)}</p>
+ <p>Déjà payé : ${money(d.paid)}</p>
+ <p class="${rest?'red':'green'}">Reste à payer : ${money(rest)}</p>
+ ${rest>0?
+ `<button class="primary" onclick="repayDebt(${i})">Rembourser</button>`:
+ '<strong class="green">Dette remboursée</strong>'}
+ </div>`;
+ }).join('')||'Aucune dette enregistrée.'}
+ </div>`;
+}
+
+function addDebt(e){
+ e.preventDefault();
+ const name=document.getElementById('dname').value.trim();
+ const amount=Number(document.getElementById('damount').value);
+ if(!name||amount<=0)return;
+ debts.push({name,amount,paid:0,date:today()});
+ save();
+ alert('Dette enregistrée.');
+ showDebts();
+}
+
+function repayDebt(i){
+ const d=debts[i];
+ if(!d)return;
+ const remaining=d.amount-d.paid;
+ const amount=Number(prompt('Montant à rembourser. Reste : '+money(remaining)));
+ if(!Number.isFinite(amount)||amount<=0)return;
+ if(amount>remaining)return alert('Le montant dépasse la dette restante.');
+ d.paid+=amount;
+ repayments.push({name:d.name,amount,date:today()});
+ save();
+ alert('Remboursement enregistré : '+money(amount));
+ showDebts();
+}
+
+/* HISTORIQUE */
+function showHistory(){
+ const items=[
+ ...sales.map(x=>({...x,type:'Vente',amount:x.total})),
+ ...expenses.map(x=>({...x,type:'Dépense'})),
+ ...debts.map(x=>({...x,type:'Dette ajoutée',amount:x.amount})),
+ ...repayments.map(x=>({...x,type:'Remboursement'}))
+ ];
+ document.getElementById('app').innerHTML=`
+ <div class="card"><h2>Historique des opérations</h2>
+ ${items.slice().reverse().map(x=>`
+ <div class="item">
+ <strong>${esc(x.type)} : ${esc(x.name)}</strong>
+ <p>${money(x.amount)} · ${esc(x.date)}</p>
+ </div>`).join('')||'Aucune opération.'}
+ </div>`;
+}
+
+/* SAUVEGARDE */
+function showBackup(){
+ document.getElementById('app').innerHTML=`
+ <div class="card">
+ <h2>Sauvegarder mes données</h2>
+ <p>Télécharge une copie de tes produits, ventes, dépenses et dettes.</p>
+ <button class="primary" onclick="backup()">Télécharger ma sauvegarde</button>
+ </div>
+ <div class="card">
+ <h2>Restaurer une sauvegarde</h2>
+ <input type="file" id="restorefile" accept=".json">
+ <button class="primary" onclick="restore()">Restaurer mes données</button>
+ </div>`;
+}
+
+function backup(){
+ save();
+ const data={products,sales,expenses,debts,repayments};
+ const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement('a');
+ a.href=url;
+ a.download='MON-COMMERCE-SAUVEGARDE.json';
+ a.click();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+function restore(){
+ const file=document.getElementById('restorefile').files[0];
+ if(!file)return alert('Choisis un fichier.');
+ const reader=new FileReader();
+ reader.onload=()=>{
+ try{
+  const d=JSON.parse(reader.result);
+  if(!Array.isArray(d.products)||!Array.isArray(d.sales)||
+     !Array.isArray(d.expenses)||!Array.isArray(d.debts))
+   return alert('Fichier invalide.');
+  if(!confirm('Remplacer les données actuelles par cette sauvegarde ?'))return;
+  products=d.products;
+  sales=d.sales;
+  expenses=d.expenses;
+  debts=d.debts;
+  repayments=Array.isArray(d.repayments)?d.repayments:[];
+  save();
+  alert('Sauvegarde restaurée.');
+  home();
+ }catch(e){alert('Fichier de sauvegarde invalide.');}
+ };
+ reader.readAsText(file);
+}
+
+/* DEMARRAGE */
+home();
+</script>
+</body>
+</html>
