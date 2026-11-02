@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#14532d"><link rel="manifest" href="manifest.webmanifest">
+<title>MON COMMERCE</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f3f6f3;color:#17251b}
+header{background:#14532d;color:white;padding:22px 16px}h1{margin:0;font-size:25px}header p{margin:6px 0 0}
+main{max-width:850px;margin:auto;padding:14px}.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.card,.panel{background:white;border-radius:12px;padding:14px;margin:10px 0;box-shadow:0 1px 5px #0001}
+.stat strong{display:block;font-size:22px;margin-top:7px;color:#14532d}
+h2{font-size:18px;margin:4px 0 12px}label{display:block;font-size:14px;margin:9px 0 4px}
+input,button{font:inherit;padding:11px;border-radius:8px;width:100%;border:1px solid #ccd5ce}
+button{background:#14532d;color:white;border:0;font-weight:bold;margin-top:10px;cursor:pointer}
+button.secondary{background:#e7efe9;color:#14532d}.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.item{border-top:1px solid #eee;padding:9px 0;font-size:14px}.muted{color:#66736a;font-size:13px}
+nav{display:flex;gap:7px;flex-wrap:wrap}nav button{width:auto;flex:1;min-width:90px}
+section{display:none}section.active{display:block}
+</style></head><body>
+<header><h1>MON COMMERCE</h1><p>Gérez votre petit commerce simplement.</p></header>
+<main>
+<div class="stats">
+<div class="card stat">Ventes totales<strong id="salesTotal">0 F</strong></div>
+<div class="card stat">Dépenses<strong id="expensesTotal">0 F</strong></div>
+<div class="card stat">Bénéfice estimé<strong id="profitTotal">0 F</strong></div>
+<div class="card stat">Articles en stock<strong id="stockCount">0</strong></div>
+</div>
+<nav><button onclick="show('products')">Produits</button><button onclick="show('sales')">Ventes</button><button onclick="show('expenses')">Dépenses</button><button onclick="show('debts')">Dettes</button></nav>
+<section id="products" class="active panel"><h2>Ajouter un produit</h2>
+<label>Nom du produit</label><input id="pname" placeholder="Ex. Riz 1 kg">
+<div class="row"><div><label>Prix de vente (F CFA)</label><input id="pprice" type="number" min="0"></div><div><label>Quantité en stock</label><input id="pqty" type="number" min="0"></div></div>
+<button onclick="addProduct()">Ajouter le produit</button><h2>Mes produits</h2><div id="productList"></div></section>
+<section id="sales" class="panel"><h2>Enregistrer une vente</h2><label>Produit</label><select id="saleProduct"></select><label>Quantité vendue</label><input id="saleQty" type="number" min="1" value="1"><button onclick="addSale()">Enregistrer la vente</button><div id="saleList"></div></section>
+<section id="expenses" class="panel"><h2>Ajouter une dépense</h2><label>Motif</label><input id="expenseName" placeholder="Ex. Transport"><label>Montant (F CFA)</label><input id="expenseAmount" type="number" min="0"><button onclick="addExpense()">Enregistrer la dépense</button><div id="expenseList"></div></section>
+<section id="debts" class="panel"><h2>Suivre une dette client</h2><label>Nom du client</label><input id="debtName"><label>Montant dû (F CFA)</label><input id="debtAmount" type="number" min="0"><button onclick="addDebt()">Ajouter la dette</button><div id="debtList"></div></section>
+<div class="panel"><h2>Sauvegarde</h2><p class="muted">Les données restent sur cet appareil. Téléchargez régulièrement une sauvegarde pour ne pas les perdre.</p><button class="secondary" onclick="backup()">Exporter mes données</button></div>
+</main>
+<script>
+const get=(k,d=[])=>JSON.parse(localStorage.getItem(k)||JSON.stringify(d));
+let products=get('mc_products'),sales=get('mc_sales'),expenses=get('mc_expenses'),debts=get('mc_debts');
+const money=n=>Math.round(n).toLocaleString('fr-FR')+' F CFA';
+function save(){localStorage.setItem('mc_products',JSON.stringify(products));localStorage.setItem('mc_sales',JSON.stringify(sales));localStorage.setItem('mc_expenses',JSON.stringify(expenses));localStorage.setItem('mc_debts',JSON.stringify(debts));render()}
+function show(id){document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')}
+function addProduct(){let name=pname.value.trim(),price=+pprice.value,qty=+pqty.value;if(!name||price<=0||qty<0)return alert('Remplissez correctement les champs.');products.push({name,price,qty});pname.value=pprice.value=pqty.value='';save()}
+function addSale(){let i=+saleProduct.value,q=+saleQty.value,p=products[i];if(!p||q<1||q>p.qty)return alert('Stock insuffisant ou quantité invalide.');p.qty-=q;sales.push({name:p.name,qty:q,total:q*p.price,date:new Date().toLocaleString('fr-FR')});save()}
+function addExpense(){let n=expenseName.value.trim(),a=+expenseAmount.value;if(!n||a<=0)return alert('Remplissez les champs.');expenses.push({name:n,amount:a,date:new Date().toLocaleString('fr-FR')});expenseName.value=expenseAmount.value='';save()}
+function addDebt(){let n=debtName.value.trim(),a=+debtAmount.value;if(!n||a<=0)return alert('Remplissez les champs.');debts.push({name:n,amount:a,date:new Date().toLocaleDateString('fr-FR')});debtName.value=debtAmount.value='';save()}
+function backup(){let blob=new Blob([JSON.stringify({products,sales,expenses,debts},null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='mon-commerce-sauvegarde.json';a.click();URL.revokeObjectURL(a.href)}
+function render(){productList.innerHTML=products.map((p,i)=>`<div class="item"><b>${p.name}</b> — ${money(p.price)} · Stock : ${p.qty} <button class="secondary" onclick="delProduct(${i})">Supprimer</button></div>`).join('')||'<p class="muted">Aucun produit pour le moment.</p>';saleProduct.innerHTML=products.map((p,i)=>`<option value="${i}">${p.name} (${p.qty} en stock)</option>`).join('');saleList.innerHTML=sales.slice().reverse().map(s=>`<div class="item">${s.date} — ${s.name} × ${s.qty} : <b>${money(s.total)}</b></div>`).join('');expenseList.innerHTML=expenses.slice().reverse().map(e=>`<div class="item">${e.date} — ${e.name} : ${money(e.amount)}</div>`).join('');debtList.innerHTML=debts.map(d=>`<div class="item">${d.name} doit <b>${money(d.amount)}</b></div>`).join('');let st=sales.reduce((a,s)=>a+s.total,0),ex=expenses.reduce((a,e)=>a+e.amount,0);salesTotal.textContent=money(st);expensesTotal.textContent=money(ex);profitTotal.textContent=money(st-ex);stockCount.textContent=products.reduce((a,p)=>a+p.qty,0)}
+function delProduct(i){if(confirm('Supprimer ce produit ?')){products.splice(i,1);save()}}
+render();if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+</script></body></html>
