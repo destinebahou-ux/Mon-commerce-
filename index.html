@@ -1,11 +1,13 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#123c32">
+<meta name="description" content="Application de gestion commerciale">
+<link rel="manifest" href="./manifest.webmanifest">
 <title>MON COMMERCE</title>
+
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,sans-serif;background:#f2f5f3;color:#17251f}
@@ -35,32 +37,105 @@ th{background:#edf3ef}
 .empty{color:#7b8981;text-align:center;padding:20px}
 .green{color:#16834e}
 .red{color:#bd3030}
-.hidden{display:none}
+.hidden{display:none!important}
 small.muted{color:#7b8981}
 footer{text-align:center;padding:20px;color:#718078}
+
+/* ECRAN DE VERROUILLAGE */
+#lockScreen{
+ min-height:100vh;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ padding:20px;
+ background:#123c32;
+}
+.lock-card{
+ width:100%;
+ max-width:380px;
+ background:white;
+ padding:25px;
+ border-radius:16px;
+ text-align:center;
+}
+.lock-card h2{color:#123c32;margin-top:0}
+.lock-card p{color:#64736c}
+.lock-card input{text-align:center;font-size:24px;letter-spacing:8px}
+.lock-card button{
+ width:100%;
+ background:#123c32;
+ color:white;
+ border:0;
+ padding:14px;
+ border-radius:8px;
+ font-size:16px;
+ font-weight:bold;
+}
+#pinMessage{color:#bd3030;min-height:20px;font-size:14px}
 </style>
 </head>
+
 <body>
 
+<div id="lockScreen">
+ <div class="lock-card">
+  <h2>MON COMMERCE</h2>
+  <p id="lockTitle">Bienvenue ! Crée ton code PIN personnel à 4 chiffres.</p>
+
+  <form id="pinForm">
+   <input
+    id="pinInput"
+    type="password"
+    inputmode="numeric"
+    pattern="[0-9]{4}"
+    maxlength="4"
+    minlength="4"
+    placeholder="••••"
+    autocomplete="off"
+    required
+   >
+   <input
+    id="pinConfirm"
+    class="hidden"
+    type="password"
+    inputmode="numeric"
+    pattern="[0-9]{4}"
+    maxlength="4"
+    minlength="4"
+    placeholder="Confirme ton PIN"
+    autocomplete="off"
+   >
+   <p id="pinMessage"></p>
+   <button type="submit" id="pinButton">Continuer</button>
+  </form>
+  <p><small>Garde ton code PIN secret.</small></p>
+ </div>
+</div>
+
+<div id="appShell" class="hidden">
+
 <header>
-<h2>MON COMMERCE</h2>
-<p>Gestion simple de ton activité commerciale</p>
+ <h2>MON COMMERCE</h2>
+ <p>Gestion simple de ton activité commerciale</p>
 </header>
 
 <nav id="navigation">
-<button class="active" onclick="page('accueil',this)">Tableau de bord</button>
-<button onclick="page('produits',this)">Produits</button>
-<button onclick="page('ventes',this)">Ventes</button>
-<button onclick="page('depenses',this)">Dépenses</button>
-<button onclick="page('dettes',this)">Dettes</button>
-<button onclick="page('clients',this)">Clients</button>
-<button onclick="page('sauvegarde',this)">Sauvegarde</button>
+ <button class="active" onclick="page('accueil',this)">Tableau de bord</button>
+ <button onclick="page('produits',this)">Produits</button>
+ <button onclick="page('ventes',this)">Ventes</button>
+ <button onclick="page('depenses',this)">Dépenses</button>
+ <button onclick="page('dettes',this)">Dettes</button>
+ <button onclick="page('clients',this)">Clients</button>
+ <button onclick="page('sauvegarde',this)">Sauvegarde</button>
 </nav>
 
 <main id="app"></main>
 <footer>MON COMMERCE © 2026</footer>
 
+</div>
+
 <script>
+/* DONNEES */
 const get=(k,d=[])=>{
  try{return JSON.parse(localStorage.getItem('mc_'+k))||d}
  catch(e){return d}
@@ -88,23 +163,115 @@ const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({
  '"':'&quot;',"'":'&#39;'
 })[c]);
 
+/* CODE PIN */
+const PIN_HASH_KEY='mc_pin_hash';
+const PIN_SALT_KEY='mc_pin_salt';
+
+let pinSetup=!localStorage.getItem(PIN_HASH_KEY);
+
+async function hashPin(pin,salt){
+ const data=new TextEncoder().encode(salt+':'+pin);
+ const hash=await crypto.subtle.digest('SHA-256',data);
+ return Array.from(new Uint8Array(hash))
+  .map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+function lockMessage(message){
+ document.getElementById('pinMessage').textContent=message||'';
+}
+
+function preparePinScreen(){
+ const title=document.getElementById('lockTitle');
+ const confirm=document.getElementById('pinConfirm');
+ const button=document.getElementById('pinButton');
+
+ if(pinSetup){
+  title.textContent='Crée ton code PIN personnel à 4 chiffres.';
+  confirm.classList.remove('hidden');
+  button.textContent='Créer mon code PIN';
+ }else{
+  title.textContent='Entre ton code PIN pour ouvrir MON COMMERCE.';
+  confirm.classList.add('hidden');
+  button.textContent='Ouvrir MON COMMERCE';
+ }
+
+ document.getElementById('pinInput').value='';
+ confirm.value='';
+ lockMessage('');
+}
+
+async function handlePin(e){
+ e.preventDefault();
+
+ const pin=document.getElementById('pinInput').value;
+ const confirm=document.getElementById('pinConfirm').value;
+
+ if(!/^[0-9]{4}$/.test(pin)){
+  return lockMessage('Le code doit contenir 4 chiffres.');
+ }
+
+ if(pinSetup){
+  if(pin!==confirm){
+   return lockMessage('Les deux codes ne correspondent pas.');
+  }
+
+  try{
+   const salt=crypto.randomUUID();
+   const hash=await hashPin(pin,salt);
+   localStorage.setItem(PIN_SALT_KEY,salt);
+   localStorage.setItem(PIN_HASH_KEY,hash);
+   pinSetup=false;
+   openApp();
+  }catch(error){
+   lockMessage('Impossible de créer le code PIN sur cet appareil.');
+  }
+ }else{
+  try{
+   const salt=localStorage.getItem(PIN_SALT_KEY);
+   const savedHash=localStorage.getItem(PIN_HASH_KEY);
+   const enteredHash=await hashPin(pin,salt);
+
+   if(enteredHash!==savedHash){
+    document.getElementById('pinInput').value='';
+    return lockMessage('Code PIN incorrect. Réessaie.');
+   }
+
+   openApp();
+  }catch(error){
+   lockMessage('Erreur. Réessaie.');
+  }
+ }
+}
+
+function openApp(){
+ document.getElementById('lockScreen').classList.add('hidden');
+ document.getElementById('appShell').classList.remove('hidden');
+ document.getElementById('pinInput').value='';
+ home();
+}
+
+document.getElementById('pinForm').addEventListener('submit',handlePin);
+preparePinScreen();
+
+/* NAVIGATION */
 function page(name,btn){
  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
  if(btn)btn.classList.add('active');
 
  const pages={
- accueil:home,
- produits:showProducts,
- ventes:showSales,
- depenses:showExpenses,
- dettes:showDebts,
- clients:showClients,
- sauvegarde:showBackup
+  accueil:home,
+  produits:showProducts,
+  ventes:showSales,
+  depenses:showExpenses,
+  dettes:showDebts,
+  clients:showClients,
+  sauvegarde:showBackup
  };
 
  if(pages[name])pages[name]();
 }
 
+/* TABLEAU DE BORD */
 function home(){
  const ca=sales.reduce((s,x)=>s+Number(x.total),0);
  const dep=expenses.reduce((s,x)=>s+Number(x.amount),0);
@@ -135,6 +302,7 @@ function home(){
  </div>`;
 }
 
+/* PRODUITS */
 function showProducts(){
  document.getElementById('app').innerHTML=`
  <h3>Gestion des produits</h3>
@@ -196,10 +364,11 @@ function editProduct(i){
 
 function deleteProduct(i){
  if(confirm('Supprimer ce produit ?')){
- products.splice(i,1);save();showProducts();
+  products.splice(i,1);save();showProducts();
  }
 }
 
+/* VENTES */
 function showSales(){
  document.getElementById('app').innerHTML=`
  <h3>Gestion des ventes</h3>
@@ -243,7 +412,12 @@ function addSale(e){
  const payment=document.getElementById('spayment').value;
  const p=products[i];
 
- if(!p||qty<=0||qty>p.qty)return alert('Stock insuffisant ou produit incorrect.');
+ if(!p||qty<=0||qty>p.qty)
+  return alert('Stock insuffisant ou produit incorrect.');
+
+ /* VERIFICATION AVANT MODIFICATION DU STOCK */
+ if(payment==='credit'&&!client)
+  return alert('Ajoute le nom du client pour une vente à crédit.');
 
  const total=p.price*qty;
  const cost=(p.cost||0)*qty;
@@ -251,20 +425,20 @@ function addSale(e){
  p.qty-=qty;
 
  sales.push({
- product:p.name,qty,total,cost,client,
- payment,date:today()
+  product:p.name,qty,total,cost,client,
+  payment,date:today()
  });
 
  if(payment==='credit'){
   let c=clients.find(x=>x.name.toLowerCase()===client.toLowerCase());
-  if(!client)return alert('Ajoute le nom du client pour une vente à crédit.');
-  if(!c){clients.push({name:client,phone:''});}
+  if(!c)clients.push({name:client,phone:''});
   debts.push({client,amount:total,paid:0,date:today(),description:'Vente de '+p.name});
  }
 
  save();showSales();
 }
 
+/* DEPENSES */
 function showExpenses(){
  document.getElementById('app').innerHTML=`
  <h3>Gestion des dépenses</h3>
@@ -300,10 +474,11 @@ function addExpense(e){
 
 function deleteExpense(i){
  if(confirm('Supprimer cette dépense ?')){
- expenses.splice(i,1);save();showExpenses();
+  expenses.splice(i,1);save();showExpenses();
  }
 }
 
+/* DETTES */
 function showDebts(){
  const remaining=d=>Math.max(0,Number(d.amount)-Number(d.paid||0));
 
@@ -360,8 +535,8 @@ function repayDebt(i){
  const d=debts[i];
  const remaining=d.amount-(d.paid||0);
  const amount=Number(prompt(
- 'Montant du remboursement en FCFA. Reste à payer : '+remaining,
- remaining
+  'Montant du remboursement en FCFA. Reste à payer : '+remaining,
+  remaining
  ));
 
  if(!Number.isFinite(amount)||amount<=0)return;
@@ -376,10 +551,11 @@ function repayDebt(i){
 
 function deleteDebt(i){
  if(confirm('Supprimer cette dette ?')){
- debts.splice(i,1);save();showDebts();
+  debts.splice(i,1);save();showDebts();
  }
 }
 
+/* CLIENTS */
 function showClients(){
  document.getElementById('app').innerHTML=`
  <h3>Gestion des clients</h3>
@@ -410,17 +586,18 @@ function addClient(e){
  const phone=document.getElementById('cphone').value.trim();
  if(!name)return;
  if(clients.some(c=>c.name.toLowerCase()===name.toLowerCase()))
- return alert('Ce client existe déjà.');
+  return alert('Ce client existe déjà.');
  clients.push({name,phone});
  save();showClients();
 }
 
 function deleteClient(i){
  if(confirm('Supprimer ce client ?')){
- clients.splice(i,1);save();showClients();
+  clients.splice(i,1);save();showClients();
  }
 }
 
+/* SAUVEGARDE */
 function showBackup(){
  document.getElementById('app').innerHTML=`
  <h3>Sauvegarde et restauration</h3>
@@ -466,36 +643,4 @@ function restore(){
       !Array.isArray(data.clients))throw new Error();
 
    products=data.products;
-   sales=data.sales;
-   expenses=data.expenses;
-   debts=data.debts;
-   clients=data.clients;
-   save();
-   home();
-   alert('Sauvegarde restaurée.');
-  }catch(e){
-   alert('Fichier de sauvegarde invalide.');
-  }
- };
- reader.readAsText(file);
-}
-
-function clearData(){
- if(!confirm('Veux-tu vraiment effacer toutes les données ?'))return;
- if(!confirm('Dernière confirmation : cette action est irréversible.'))return;
-
- products=[];
- sales=[];
- expenses=[];
- debts=[];
- clients=[];
- save();
- home();
-}
-
-/* DEMARRAGE */
-home();
-</script>
-</body>
- </html>
- 
+   sales=da
